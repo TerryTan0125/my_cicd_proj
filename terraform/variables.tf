@@ -10,5 +10,5 @@ variable "image" {
 
 variable "kubeconfig_path" {
   type    = string
-  default = "/root/.kube/config"
+  default = "/home/jenkins/.kube/config"
 }
