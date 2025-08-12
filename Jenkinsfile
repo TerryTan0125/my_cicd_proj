@@ -1,150 +1,58 @@
 pipeline {
-  agent any
-  environment {
-    // image tag 用 commit sha 保证唯一
-    SHORT_COMMIT = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-    IMAGE = "terrytan0125/my-cicd-proj-app:\${SHORT_COMMIT}"
-    TERRAFORM_DIR = "terraform"
-  }
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-    stage('Build & Test') {
-      steps {
-        dir('app') {
-          sh 'npm ci'
-          sh 'npm test || true'
+    agent { label 'cicd-agent' } // 替换成你已有 agent 的 label
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'master',
+                    url: 'https://github.com/terrytan0125/my_cicd_proj.git'
+            }
         }
-      }
-    }
-    stage('Build Docker Image') {
-      steps {
-        script {
-          // 使用 docker credential 在 Jenkins 中登录并 push
-          docker.withRegistry('https://registry.hub.docker.com', 'terrytan0125') {
-            def image = docker.build(env.IMAGE)
-            image.push()
-          }
+
+        stage('Build WAR') {
+            steps {
+                container('maven-container') {
+                    sh 'mvn -f app/pom.xml clean package -DskipTests'
+                }
+            }
         }
-      }
-    }
-    stage('Prepare Kubeconfig for Terraform') {
-      steps {
-        // 从 Jenkins Credentials 导出 kubeconfig 文件到 workspace，并设置 env var
-        withCredentials([file(credentialsId: '<KUBECONFIG_CREDENTIAL_ID>', variable: 'KUBECONFIG_FILE')]) {
-          sh '''
-            mkdir -p $WORKSPACE/.kube
-            cp "$KUBECONFIG_FILE" "$WORKSPACE/.kube/config"
-            export KUBECONFIG="$WORKSPACE/.kube/config"
-            echo "kubeconfig placed at $WORKSPACE/.kube/config"
-          '''
+
+        stage('Build & Push Image (kaniko)') {
+            steps {
+                container('kaniko-container') {
+                    script {
+                        def tag = env.GIT_COMMIT ?: "latest"
+                        //def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                        //def tag = commitId ?: "latest"
+                        sh """
+                          /kaniko/executor \
+                            --context=dir://${WORKSPACE} \
+                            --dockerfile=${WORKSPACE}/Dockerfile \
+                            --destination=terrytan0125/my_cicd_proj:${tag} \
+                            --verbosity=info \
+                            --cleanup
+                        """
+                    }
+                }
+            }
         }
-      }
-    }
-    stage('Terraform Init & Apply') {
-      steps {
-        dir("${TERRAFORM_DIR}") {
-          withEnv(["KUBECONFIG=${WORKSPACE}/.kube/config"]) {
-            sh 'terraform init -input=false'
-pipeline {
-  agent any
-  environment {
-    // image tag 用 commit sha 保证唯一
-    SHORT_COMMIT = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-    IMAGE = "<DOCKERHUB_REPO>:\${SHORT_COMMIT}"
-    TERRAFORM_DIR = "terraform"
-  }
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-    stage('Build & Test') {
-      steps {
-        dir('app') {
-          sh 'npm ci'
-          sh 'npm test || true'
+
+        stage('Terraform Apply') {
+            steps {
+                container('jnlp') {
+                    sh """
+                      cd terraform
+                      terraform init -input=false
+                      terraform apply -auto-approve -var="image=terrytan0125/my_cicd_proj:${GIT_COMMIT ?: "latest"}"
+                    """
+                }
+            }
         }
-      }
-    }
-    stage('Build Docker Image') {
-      steps {
-        script {
-          // 使用 docker credential 在 Jenkins 中登录并 push
-          docker.withRegistry('https://registry.hub.docker.com', '<DOCKERHUB_CREDENTIALS_ID>') {
-            def image = docker.build(env.IMAGE)
-            image.push()
-          }
+
+        stage('Done') {
+            steps {
+                echo "Pipeline finished. If everything OK, service should be created in namespace my-cicd."
+            }
         }
-      }
     }
-    stage('Prepare Kubeconfig for Terraform') {
-      steps {
-        // 从 Jenkins Credentials 导出 kubeconfig 文件到 workspace，并设置 env var
-        withCredentials([file(credentialsId: '<KUBECONFIG_CREDENTIAL_ID>', variable: 'KUBECONFIG_FILE')]) {
-          sh '''
-            mkdir -p $WORKSPACE/.kube
-            cp "$KUBECONFIG_FILE" "$WORKSPACE/.kube/config"
-            export KUBECONFIG="$WORKSPACE/.kube/config"
-            echo "kubeconfig placed at $WORKSPACE/.kube/config"
-          '''
-        }
-      }
-    }
-    stage('Terraform Init & Apply') {
-      steps {
-        dir("${TERRAFORM_DIR}") {
-          withEnv(["KUBECONFIG=${WORKSPACE}/.kube/config"]) {
-            sh 'terraform init -input=false'
-            sh "terraform apply -auto-approve -var=\"image=${IMAGE}\" -var=\"kubeconfig_path=${WORKSPACE}/.kube/config\""
-          }
-        }
-      }
-    }
-    stage('Smoke Test') {
-      steps {
-        script {
-          // 获取 NodePort 并尝试访问一次（仅在 minikube 可达时）
-          sh '''
-            kubectl --kubeconfig=$WORKSPACE/.kube/config -n cicd-demo get svc || true
-            POD=\$(kubectl --kubeconfig=$WORKSPACE/.kube/config -n cicd-demo get pods -l app=cicd-demo-app -o jsonpath="{.items[0].metadata.name}")
-            echo "Example pod: \$POD"
-            kubectl --kubeconfig=$WORKSPACE/.kube/config -n cicd-demo logs \$POD || true
-          '''
-        }
-      }
-    }
-  }
-  post {
-    success { echo 'Pipeline completed successfully' }
-    failure { echo 'Pipeline failed' }
-  }
-}
-            sh "terraform apply -auto-approve -var=\"image=${IMAGE}\" -var=\"kubeconfig_path=${WORKSPACE}/.kube/config\""
-          }
-        }
-      }
-    }
-    stage('Smoke Test') {
-      steps {
-        script {
-          // 获取 NodePort 并尝试访问一次（仅在 minikube 可达时）
-          sh '''
-            kubectl --kubeconfig=$WORKSPACE/.kube/config -n cicd-demo get svc || true
-            POD=\$(kubectl --kubeconfig=$WORKSPACE/.kube/config -n cicd-demo get pods -l app=cicd-demo-app -o jsonpath="{.items[0].metadata.name}")
-            echo "Example pod: \$POD"
-            kubectl --kubeconfig=$WORKSPACE/.kube/config -n cicd-demo logs \$POD || true
-          '''
-        }
-      }
-    }
-  }
-  post {
-    success { echo 'Pipeline completed successfully' }
-    failure { echo 'Pipeline failed' }
-  }
 }
