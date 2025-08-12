@@ -45,7 +45,7 @@ resource "kubernetes_deployment" "webapp" {
         container {
           name  = "tomcat"
           image = var.image
-          ports {
+          port {
             container_port = 8080
           }
         }
