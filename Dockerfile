@@ -1,6 +1,6 @@
 # 使用官方 Tomcat 和 OpenJDK 11
-FROM tomcat:9.0-jdk11-openjdk
-
+#FROM tomcat:9.0-jdk11-openjdk
+FROM tomcat:10.1-jdk17
 # 删除默认 webapps 下内容（可选）
 RUN rm -rf /usr/local/tomcat/webapps/*
 
