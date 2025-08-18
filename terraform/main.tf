@@ -68,7 +68,7 @@ resource "kubernetes_service" "webapp" {
     port {
       port        = 8080
       target_port = 8080
-      node_port   = 30080
+      node_port   = var.nodeport
       protocol    = "TCP"
     }
 

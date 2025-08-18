@@ -12,3 +12,8 @@ variable "kubeconfig_path" {
   type    = string
   default = "/home/jenkins/.kube/config"
 }
+
+variable "nodeport" {
+  type    = string
+  default = "30080"
+}
