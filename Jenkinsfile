@@ -15,8 +15,8 @@ pipeline {
 	stage('Code Analysis (SonarQube)') {
 	    steps {
 	        container('maven-container') {
-	            withSonarQubeEnv('SonarQube') {
-	                sh 'mvn -f app/pom.xml sonar:sonar'
+	            withSonarQubeEnv('MySonarQube') {
+	                sh 'mvn -f app/pom.xml clean verify sonar:sonar'
 	            }
 	        }
 	    }
