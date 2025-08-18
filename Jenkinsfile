@@ -65,7 +65,7 @@ pipeline {
                     sh """
                       cd terraform
                       terraform init -input=false
-		      terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
+		      //terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
                       terraform apply -auto-approve -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"
                     """
                 }
