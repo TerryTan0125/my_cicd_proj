@@ -45,7 +45,7 @@ pipeline {
                         def tag = env.GIT_COMMIT ? env.GIT_COMMIT.take(6) : "latest" + "-${env.BUILD_NUMBER}"
                         //def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                         //def tag = commitId ?: "TERRY" + "-${env.BUILD_NUMBER}"
-			${env.IMG_TAG} = tag
+			env.IMG_TAG = tag
                         sh """
                           /kaniko/executor \
                             --context=dir://${WORKSPACE} \
