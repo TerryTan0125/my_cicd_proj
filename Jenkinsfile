@@ -1,4 +1,4 @@
--Dmaven.repo.local=$WORKSPACE/.m2/repositorypipeline {
+pipeline {
     agent { label 'cicd-agent' } // 替换成你已有 agent 的 label
     
     environment {
