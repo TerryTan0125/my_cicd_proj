@@ -16,7 +16,8 @@ pipeline {
 	    steps {
 	        container('maven-container') {
 	            withSonarQubeEnv('MySonarQube') {
-	                sh 'mvn -f app/pom.xml -Dmaven.repo.local=$WORKSPACE/.m2/repository clean verify sonar:sonar'
+	                sh 'mvn -f app/pom.xml clean verify sonar:sonar \ 
+			-Dsonar.projectKey=my_cicd_proj'
 	            }
 	        }
 	    }
