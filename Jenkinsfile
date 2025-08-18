@@ -61,22 +61,48 @@ pipeline {
             }
         }
 
-        stage('Terraform Apply') {
+        stage('Terraform Apply to dev') {
             steps {
                 container('jnlp') {
+		    def statetf = "/home/jenkins/terraform-state/dev/terraform.tfstate"
                     sh """
                       cd terraform
-                      terraform init -input=false
+                      terraform init -backend-config="path=${statetf}" -input=false
 		      # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
-                      terraform apply -auto-approve -var="image=terrytan0125/my_cicd_proj:${tag}"
+                      terraform apply -auto-approve -var="namespace=DEV" -var="image=terrytan0125/my_cicd_proj:${tag}"
                     """
                 }
             }
         }
-
+        stage('Terraform Apply to QA') {
+            steps {
+                container('jnlp') {
+		    def statetf = "/home/jenkins/terraform-state/qa/terraform.tfstate"
+                    sh """
+                      cd terraform
+                      terraform init -backend-config="path=${statetf}" -input=false
+                      # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
+                      terraform apply -auto-approve -var="namespace=QA" -var="image=terrytan0125/my_cicd_proj:${tag}"
+                    """
+                }
+            }
+        }
+        stage('Terraform Apply to prod') {
+            steps {
+                container('jnlp') {
+		    def statetf = "/home/jenkins/terraform-state/prod/terraform.tfstate"
+                    sh """
+                      cd terraform
+                      terraform init -backend-config="path=${statetf}" -input=false
+                      # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
+                      terraform apply -auto-approve -var="namespace=PROD" -var="image=terrytan0125/my_cicd_proj:${tag}"
+                    """
+                }
+            }
+        }
         stage('Done') {
             steps {
-                echo "Pipeline finished. If everything OK, service should be created in namespace my-cicd."
+                echo "Pipeline finished. service should be created in namespace dev/QA/Prod."
             }
         }
     }
