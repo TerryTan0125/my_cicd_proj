@@ -41,9 +41,9 @@ pipeline {
             steps {
                 container('kaniko-container') {
                     script {
-                        //def tag = env.GIT_COMMIT ?: "latest"
-                        def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                        def tag = commitId ?: "TERRY" + "-${env.BUILD_NUMBER}"
+                        def tag = env.GIT_COMMIT ? env.GIT_COMMIT.take(6) : "latest" + "-${env.BUILD_NUMBER}"
+                        //def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                        //def tag = commitId ?: "TERRY" + "-${env.BUILD_NUMBER}"
                         sh """
                           /kaniko/executor \
                             --context=dir://${WORKSPACE} \
