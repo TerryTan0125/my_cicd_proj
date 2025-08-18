@@ -1,5 +1,9 @@
 pipeline {
     agent { label 'cicd-agent' } // 替换成你已有 agent 的 label
+    
+    environment {
+      SONARQUBE_ENV = 'SonarQube'
+    }
 
     stages {
         stage('Checkout') {
@@ -8,6 +12,22 @@ pipeline {
                     url: 'https://github.com/terrytan0125/my_cicd_proj.git'
             }
         }
+	stage('Code Analysis (SonarQube)') {
+	    steps {
+	        container('maven-container') {
+	            withSonarQubeEnv('SonarQube') {
+	                sh 'mvn -f app/pom.xml sonar:sonar'
+	            }
+	        }
+	    }
+	}
+	stage('Run Unit Tests') {
+	    steps {
+	        container('maven-container') {
+	            sh 'mvn -f app/pom.xml test'
+	        }
+	    }
+	}
 
         stage('Build WAR') {
             steps {
@@ -21,9 +41,9 @@ pipeline {
             steps {
                 container('kaniko-container') {
                     script {
-                        def tag = env.GIT_COMMIT ?: "latest"
-                        //def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                        //def tag = commitId ?: "latest"
+                        //def tag = env.GIT_COMMIT ?: "latest"
+                        def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                        def tag = commitId ?: "TERRY" + "-${env.BUILD_NUMBER}"
                         sh """
                           /kaniko/executor \
                             --context=dir://${WORKSPACE} \
