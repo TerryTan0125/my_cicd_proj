@@ -70,7 +70,7 @@ pipeline {
                       cd terraform
                       terraform init -backend-config="path=${statetf}" -input=false
 		      # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
-                      terraform apply -auto-approve -var="namespace=DEV" -var="image=terrytan0125/my_cicd_proj:${tag}"
+                      terraform apply -auto-approve -var="namespace=dev" -var="image=terrytan0125/my_cicd_proj:${tag}"
                     """
 		  }
                 }
@@ -85,7 +85,7 @@ pipeline {
                       cd terraform
                       terraform init -backend-config="path=${statetf}" -input=false
                       # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
-                      terraform apply -auto-approve -var="namespace=QA" -var="image=terrytan0125/my_cicd_proj:${tag}"
+                      terraform apply -auto-approve -var="namespace=qa" -var="image=terrytan0125/my_cicd_proj:${tag}"
                     """
 		  }
                 }
@@ -100,7 +100,7 @@ pipeline {
                       cd terraform
                       terraform init -backend-config="path=${statetf}" -input=false
                       # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
-                      terraform apply -auto-approve -var="namespace=PROD" -var="image=terrytan0125/my_cicd_proj:${tag}"
+                      terraform apply -auto-approve -var="namespace=prod" -var="image=terrytan0125/my_cicd_proj:${tag}"
                     """
 		  }
                 }
