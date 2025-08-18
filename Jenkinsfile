@@ -16,8 +16,10 @@ pipeline {
 	    steps {
 	        container('maven-container') {
 	            withSonarQubeEnv('MySonarQube') {
-	                sh 'mvn -f app/pom.xml clean verify sonar:sonar \ 
-			-Dsonar.projectKey=my_cicd_proj'
+	                sh """
+			mvn -f app/pom.xml clean verify sonar:sonar \ 
+			-Dsonar.projectKey=my_cicd_proj
+			"""
 	            }
 	        }
 	    }
