@@ -64,6 +64,7 @@ pipeline {
         stage('Terraform Apply to dev') {
             steps {
                 container('jnlp') {
+		  script {	
 		    def statetf = "/home/jenkins/terraform-state/dev/terraform.tfstate"
                     sh """
                       cd terraform
@@ -71,12 +72,14 @@ pipeline {
 		      # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
                       terraform apply -auto-approve -var="namespace=DEV" -var="image=terrytan0125/my_cicd_proj:${tag}"
                     """
+		  }
                 }
             }
         }
         stage('Terraform Apply to QA') {
             steps {
                 container('jnlp') {
+		  script {
 		    def statetf = "/home/jenkins/terraform-state/qa/terraform.tfstate"
                     sh """
                       cd terraform
@@ -84,12 +87,14 @@ pipeline {
                       # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
                       terraform apply -auto-approve -var="namespace=QA" -var="image=terrytan0125/my_cicd_proj:${tag}"
                     """
+		  }
                 }
             }
         }
         stage('Terraform Apply to prod') {
             steps {
                 container('jnlp') {
+		  script {
 		    def statetf = "/home/jenkins/terraform-state/prod/terraform.tfstate"
                     sh """
                       cd terraform
@@ -97,6 +102,7 @@ pipeline {
                       # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
                       terraform apply -auto-approve -var="namespace=PROD" -var="image=terrytan0125/my_cicd_proj:${tag}"
                     """
+		  }
                 }
             }
         }
