@@ -13,7 +13,7 @@ public class HelloServlet extends HttpServlet {
         resp.setContentType("text/html;charset=UTF-8");
         resp.getWriter().println("<html><head><title>My CI/CD App</title></head>");
         resp.getWriter().println("<body><h1>Hello from my_cicd_proj</h1>");
-        resp.getWriter().println("<p>Built by Jenkins + Kaniko + Terraform</p>");
+        resp.getWriter().println("<p>Built by Jenkins + Maven + SonarQube + Kaniko + Terraform</p>");
         resp.getWriter().println("</body></html>");
     }
 }
