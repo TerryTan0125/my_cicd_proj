@@ -3,6 +3,7 @@ pipeline {
     
     environment {
       SONARQUBE_ENV = 'SonarQube'
+      IMG_TAG = ''
     }
 
     stages {
@@ -44,11 +45,12 @@ pipeline {
                         def tag = env.GIT_COMMIT ? env.GIT_COMMIT.take(6) : "latest" + "-${env.BUILD_NUMBER}"
                         //def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                         //def tag = commitId ?: "TERRY" + "-${env.BUILD_NUMBER}"
+			${env.IMG_TAG} = tag
                         sh """
                           /kaniko/executor \
                             --context=dir://${WORKSPACE} \
                             --dockerfile=${WORKSPACE}/Dockerfile \
-                            --destination=terrytan0125/my_cicd_proj:${tag} \
+                            --destination=terrytan0125/my_cicd_proj:${env.IMG_TAG} \
                             --verbosity=info \
                             --cleanup
                         """
@@ -63,7 +65,8 @@ pipeline {
                     sh """
                       cd terraform
                       terraform init -input=false
-                      terraform apply -auto-approve -var="image=terrytan0125/my_cicd_proj:${GIT_COMMIT ?: "latest"}"
+		      terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
+                      terraform apply -auto-approve -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"
                     """
                 }
             }
