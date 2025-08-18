@@ -1,4 +1,4 @@
-pipeline {
+-Dmaven.repo.local=$WORKSPACE/.m2/repositorypipeline {
     agent { label 'cicd-agent' } // 替换成你已有 agent 的 label
     
     environment {
@@ -16,7 +16,7 @@ pipeline {
 	    steps {
 	        container('maven-container') {
 	            withSonarQubeEnv('MySonarQube') {
-	                sh 'mvn -f app/pom.xml clean verify sonar:sonar'
+	                sh 'mvn -f app/pom.xml -Dmaven.repo.local=$WORKSPACE/.m2/repository clean verify sonar:sonar'
 	            }
 	        }
 	    }
