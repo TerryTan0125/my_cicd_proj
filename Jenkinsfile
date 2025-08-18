@@ -1,9 +1,10 @@
+def tag = ""
 pipeline {
     agent { label 'cicd-agent' } // 替换成你已有 agent 的 label
     
     environment {
       SONARQUBE_ENV = 'SonarQube'
-      IMG_TAG = ''
+      IMG_TAG = 'latest'
     }
 
     stages {
@@ -42,15 +43,15 @@ pipeline {
             steps {
                 container('kaniko-container') {
                     script {
-                        def tag = env.GIT_COMMIT ? env.GIT_COMMIT.take(6) : "latest" + "-${env.BUILD_NUMBER}"
+                        tag = env.GIT_COMMIT ? env.GIT_COMMIT.take(6) : "latest" + "-${env.BUILD_NUMBER}"
                         //def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                         //def tag = commitId ?: "TERRY" + "-${env.BUILD_NUMBER}"
-			env.IMG_TAG = tag
+			//env.IMG_TAG = tag
                         sh """
                           /kaniko/executor \
                             --context=dir://${WORKSPACE} \
                             --dockerfile=${WORKSPACE}/Dockerfile \
-                            --destination=terrytan0125/my_cicd_proj:${env.IMG_TAG} \
+                            --destination=terrytan0125/my_cicd_proj:${tag} \
                             --verbosity=info \
                             --cleanup
                         """
@@ -65,8 +66,8 @@ pipeline {
                     sh """
                       cd terraform
                       terraform init -input=false
-		      //terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
-                      terraform apply -auto-approve -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"
+		      # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
+                      terraform apply -auto-approve -var="image=terrytan0125/my_cicd_proj:${tag}"
                     """
                 }
             }
