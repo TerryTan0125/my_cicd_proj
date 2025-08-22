@@ -27,7 +27,7 @@ resource "kubernetes_deployment" "webapp" {
   }
 
   spec {
-    replicas = 1
+    replicas = var.reps
     selector {
       match_labels = {
         app = "my-cicd-app"

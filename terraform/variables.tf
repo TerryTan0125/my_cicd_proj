@@ -17,3 +17,8 @@ variable "nodeport" {
   type    = string
   default = "30080"
 }
+
+variable "reps" {
+  type    = string
+  default = "1"
+}
