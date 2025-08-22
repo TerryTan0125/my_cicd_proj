@@ -48,6 +48,7 @@ resource "kubernetes_deployment" "webapp" {
       metadata {
         labels = {
           app = "my-cicd-app"
+	  tier = "main"
         }
       }
 
