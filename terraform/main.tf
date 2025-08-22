@@ -19,10 +19,11 @@ resource "kubernetes_namespace" "app" {
 
 resource "kubernetes_deployment" "webapp" {
   metadata {
-    name      = "my-cicd-deployment"
+    name      = "my-cicd-main"
     namespace = kubernetes_namespace.app.metadata[0].name
     labels = {
       app = "my-cicd-app"
+      tier = "main"
     }
   }
 
@@ -39,6 +40,7 @@ resource "kubernetes_deployment" "webapp" {
     selector {
       match_labels = {
         app = "my-cicd-app"
+	tier = "main"
       }
     }
 
@@ -46,6 +48,50 @@ resource "kubernetes_deployment" "webapp" {
       metadata {
         labels = {
           app = "my-cicd-app"
+        }
+      }
+
+      spec {
+        container {
+          name  = "tomcat"
+          image = var.image
+          port {
+            container_port = 8080
+          }
+        }
+      }
+    }
+  }
+}
+
+# Canary Deployment
+resource "kubernetes_deployment" "webapp_canary" {
+  count = var.enable_canary ? 1 : 0
+
+  metadata {
+    name      = "my-cicd-canary"
+    namespace = kubernetes_namespace.app.metadata[0].name
+    labels = {
+      app  = "my-cicd-app"
+      tier = "canary"
+    }
+  }
+
+  spec {
+    replicas = var.canary_reps
+
+    selector {
+      match_labels = {
+        app  = "my-cicd-app"
+        tier = "canary"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app  = "my-cicd-app"
+          tier = "canary"
         }
       }
 
@@ -71,6 +117,7 @@ resource "kubernetes_service" "webapp" {
   spec {
     selector = {
       app = "my-cicd-app"
+      tier = "main"
     }
 
     port {

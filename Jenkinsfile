@@ -5,6 +5,7 @@ pipeline {
     environment {
       SONARQUBE_ENV = 'SonarQube'
       IMG_TAG = 'latest'
+      DEPLOY_CANARY = 'true'
     }
 
     stages {
@@ -43,11 +44,9 @@ pipeline {
             steps {
                 container('kaniko-container') {
                     script {
-                        tag = env.GIT_COMMIT ? env.GIT_COMMIT.take(6) : "latest"
-			tag = "${tag}-${env.BUILD_NUMBER}"
-                        //def commitId = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-                        //def tag = commitId ?: "TERRY" + "-${env.BUILD_NUMBER}"
-			//env.IMG_TAG = tag
+                        //tag = env.GIT_COMMIT ? env.GIT_COMMIT.take(6) : "latest"
+			//tag = "${tag}-${env.BUILD_NUMBER}"
+			tag = "terry-${env.BUILD_NUMBER}"
                         sh """
                           /kaniko/executor \
                             --context=dir://${WORKSPACE} \
@@ -98,9 +97,14 @@ pipeline {
 		    def statetf = "/home/jenkins/terraform-state/prod/terraform.tfstate"
                     sh """
                       cd terraform
-                      terraform init -backend-config="path=${statetf}" -reconfigure -input=false
-                      # terraform refresh -var="image=terrytan0125/my_cicd_proj:${env.IMG_TAG}"  # 同步远程 state
-                      terraform apply -auto-approve -var="namespace=prod" -var="reps=5" -var="nodeport=30086" -var="image=terrytan0125/my_cicd_proj:${tag}"
+		      terraform init -backend-config="path=${statetf}" -reconfigure -input=false
+                          terraform apply -auto-approve \
+                            -var="namespace=prod" \
+                            -var="reps=4" \
+                            -var="canary_reps=1" \
+                            -var="nodeport=30086" \
+                            -var="image=terrytan0125/my_cicd_proj:${tag}" \
+                            -var="enable_canary=${DEPLOY_CANARY}"
                     """
 		  }
                 }

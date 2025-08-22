@@ -22,3 +22,5 @@ variable "reps" {
   type    = string
   default = "1"
 }
+variable "canary_reps" { default = 1 }
+variable "enable_canary" { default = false }
