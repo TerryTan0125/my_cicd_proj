@@ -118,7 +118,7 @@ resource "kubernetes_service" "webapp" {
   spec {
     selector = {
       app = "my-cicd-app"
-      tier = "main"
+#      tier = "main"
     }
 
     port {
