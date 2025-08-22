@@ -28,6 +28,14 @@ resource "kubernetes_deployment" "webapp" {
 
   spec {
     replicas = var.reps
+    strategy {
+      type = "RollingUpdate"
+
+      rolling_update {
+        max_unavailable = 1
+        max_surge       = 1
+      }
+    }
     selector {
       match_labels = {
         app = "my-cicd-app"
