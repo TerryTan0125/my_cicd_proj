@@ -59,6 +59,16 @@ resource "kubernetes_deployment" "webapp" {
           port {
             container_port = 8080
           }
+          resources {
+            limits = {
+              cpu    = "200m"
+              memory = "256Mi"
+            }
+            requests = {
+              cpu    = "100m"
+              memory = "128Mi"
+            }
+          }
         }
       }
     }
@@ -102,6 +112,16 @@ resource "kubernetes_deployment" "webapp_canary" {
           image = var.image
           port {
             container_port = 8080
+          }
+          resources {
+            limits = {
+              cpu    = "200m"
+              memory = "256Mi"
+            }
+            requests = {
+              cpu    = "100m"
+              memory = "128Mi"
+            }
           }
         }
       }
